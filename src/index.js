@@ -1,6 +1,11 @@
 import debounce from 'lodash.debounce';
 import './css/styles.css';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { fetchCountries } from './fetchCountries';
 
+const ALERT_MESSAGE = 'Oops, there is no country with that name!!!';
+const INFO_MESSAGE =
+  'Too many matches found. Please enter a more specific name.';
 const DEBOUNCE_DELAY = 300;
 
 const refs = {
@@ -12,20 +17,21 @@ const refs = {
 refs.input.addEventListener('input', debounce(onInputChange, DEBOUNCE_DELAY));
 
 function onInputChange(event) {
-  let country = event.target.value;
+  let country = event.target.value.trim();
 
-  fetchCountries(country).then(getCountry);
-}
+  if (country === '') {
+    clearCountriesList();
+    clearCountryInfo();
+    return;
+  }
 
-function fetchCountries(country) {
-  return fetch(
-    `https://restcountries.com/v2/name/${country}?fields=name,capital,population,flags,languages`
-  ).then(response => {
-    if (!response.ok) {
-      throw new Error(response.status);
-    }
-    return response.json();
-  });
+  fetchCountries(country)
+    .then(renderResults)
+    .catch(() => {
+      clearCountriesList();
+      clearCountryInfo();
+      Notify.failure(ALERT_MESSAGE);
+    });
 }
 
 function getCountriesList(countries) {
@@ -62,44 +68,60 @@ function markupCountry(country) {
     flags: { svg },
     languages,
   } = country;
-  return `<div class="country-info__main">
-  <img src="${svg}" alt="${name} flag" width = 100/>
-  <p>${name}</p>
+  return `<div class = "wrapper"><div class="country-info__main">
+  <img src="${svg}" alt="${name} flag" width = 50/>
+  <p class = "country-name">${name}</p>
 </div>
 <div class="country-info__secondary">
   <p class="country-info__value">
-    <span class="country-info__headding">Capital</span>${capital}
+    <span class="country-info__headding">Capital : </span>${capital}
   </p>
   <p class="country-info__value">
-    <span class="country-info__headding">Population</span>
+    <span class="country-info__headding">Population : </span>
     ${population}
   </p>
   <p class="country-info__value">
-    <span class="country-info__headding">Languages</span>${languages}
+    <span class="country-info__headding">Languages : </span>${getLanguage(
+      languages
+    )}
   </p>
-</div>`;
+</div></div>`;
 }
 
 function renderCountry(markup) {
   refs.countryInfo.innerHTML = markup;
 }
 
-// GET DATA FROM COUNTRIES API
+function getLanguage(languages) {
+  for (let language of languages) {
+    return language.name;
+  }
+}
 
-// function getData(data) {
-//   return data.map(country => {
-//     console.log('name - ', country.name);
-//     console.log('capital - ', country.capital);
-//     console.log('languages - ', country.languages);
-//     console.log('flag svg - ', country.flags.svg);
-//   });
-// }
+function renderResults(countries) {
+  if (countries.length > 10) {
+    Notify.info(INFO_MESSAGE);
+    clearCountriesList();
+    clearCountryInfo();
+    return;
+  }
 
-// function getData(data) {
-//   return data.map(({ name, capital, languages, flags: { svg } } = data) => {
-//     console.log('name - ', name);
-//     console.log('capital - ', capital);
-//     console.log('languages - ', languages[3]);
-//     console.log('flag svg - ', svg);
-//   });
-// }
+  if (countries.length > 1 && countries.length <= 10) {
+    getCountriesList(countries);
+    clearCountryInfo();
+    return;
+  }
+  if (countries.length === 1) {
+    getCountry(countries);
+    clearCountriesList();
+    return;
+  }
+}
+
+function clearCountriesList() {
+  refs.countriesList.innerHTML = '';
+}
+
+function clearCountryInfo() {
+  refs.countryInfo.innerHTML = '';
+}

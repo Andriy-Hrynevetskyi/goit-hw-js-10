@@ -23,7 +23,13 @@ body {
 .country-list {
   background-color: #f2f3f4;
 }
+
 .country-item {
+  background-color: #98dff5;
+}
+
+.country-item,
+.country-info__main {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -37,6 +43,28 @@ body {
   margin-left: 10px;
 
   font-size: 32px;
-  font-weight: 500;
+  font-weight: 700;
   font-style: italic;
+}
+
+.wrapper {
+  background-color: #96f705;
+  width: fit-content;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 6px 3px 3px #084006;
+}
+
+.country-info__main {
+  margin-bottom: 15px;
+}
+
+.country-info__value {
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.country-info__headding {
+  font-size: 24px;
+  font-weight: 600;
 }
